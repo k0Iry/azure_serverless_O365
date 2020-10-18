@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "host": "https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/",
+    "client_id": "",
+    "client_secret": "",
+    "redirect_uri": "https://127.0.0.1:7071/api/auth",
+    "AzureWebJobs.refresh_token.Disabled": "true"
+  }
+}
