@@ -40,7 +40,8 @@ def access(token, path, dir) -> func.HttpResponse:
 
     Args:
         token: The access token.
-        path: The path to be accessed, if not given, root.
+        path:  The path to be accessed, if not given, root.
+        dir:   If path is a file(False) or a directory(True)
 
     Returns:
         Return the meta data for files under this path
@@ -59,7 +60,7 @@ def access(token, path, dir) -> func.HttpResponse:
 
     return func.HttpResponse(body=response.read(), status_code=response.status)
 
-def is_dir(path):
+def is_dir(path) -> bool:
     type, _ = mimetypes.guess_type(path, True)
     return (not type)
 
@@ -74,8 +75,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     token = entity.access_token.value
 
     if req.method == "GET":
-        path_encoded = urllib.parse.quote(req.params.get("access"))
-        return access(token, path_encoded, is_dir(path_encoded))
+        path_encoded = urllib.parse.quote(req.params.get("access")) if req.params.get("access") else None
+        dir = True if not path_encoded else is_dir(path_encoded)
+        return access(token, path_encoded, dir)
     
     return func.HttpResponse("choose an action")
 

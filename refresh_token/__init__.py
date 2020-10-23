@@ -3,8 +3,8 @@ import logging
 
 import azure.functions as func
 import os, json, urllib.request
-from azure.data.tables import TableServiceClient, TableClient, UpdateMode
-from azure.core.exceptions import ResourceExistsError, HttpResponseError
+from azure.data.tables import TableClient, UpdateMode
+from azure.core.exceptions import HttpResponseError
 from urllib.parse import urlencode, quote_plus
 
 
