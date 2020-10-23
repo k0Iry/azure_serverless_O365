@@ -11,7 +11,6 @@ from urllib.parse import urlencode, quote_plus
 def main(mytimer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc).isoformat()
 
-    # if mytimer.past_due:
     logging.info('Now we are starting to refresh tokens!')
     refresh_token = os.environ["host"] + "token"
     request = urllib.request.Request(refresh_token)

@@ -1,4 +1,29 @@
 {
   "$schema": "http://json.schemastore.org/proxies",
-  "proxies": {}
+  "proxies": {
+    "onedrive_proxy": {
+      "matchCondition": {
+        "methods": [
+          "GET"
+        ],
+        "route": "/api/onedrive/{*path}"
+      },
+      "responseOverrides": {
+        "response.headers.Content-Type": "application/json"
+      },
+      "backendUri": "https://localhost/api/onedrive?code=%onedrive_code%&access={path}"
+    },
+    "onedrive_root": {
+      "matchCondition": {
+        "methods": [
+          "GET"
+        ],
+        "route": "/api/onedrive/"
+      },
+      "responseOverrides": {
+        "response.headers.Content-Type": "application/json"
+      },
+      "backendUri": "https://localhost/api/onedrive?code=%onedrive_code%"
+    }
+  }
 }

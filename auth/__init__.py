@@ -8,7 +8,7 @@ from azure.core.exceptions import ResourceExistsError, HttpResponseError
 from urllib.parse import urlencode, quote_plus
 from urllib.error import URLError, HTTPError
 
-def getToken(code):
+def getToken(code) -> func.HttpResponse:
     connection_string = os.environ["AzureWebJobsStorage"]
     client = TableClient.from_connection_string(conn_str=connection_string, table_name="tokens")
     try:
@@ -41,11 +41,13 @@ def getToken(code):
             }
             client.create_entity(entity=entity)
         except HTTPError as e:
-            print('Error code: ', e.code)
+            return func.HttpResponse("Error msg: {}".format(e.msg), status_code=e.code)
         except URLError as e:
-            print('Reason: ', e.reason)
+            return func.HttpResponse("URL error: {}".format(e.reason), status_code=404)
 
     logging.info('Tokens will be refreshed automatically')
+    return func.HttpResponse(f"Authorized successfully! Token has been saved.")
+
 
 # This function shouldn't be triggered manually
 def main(req: func.HttpRequest) -> func.HttpResponse:
@@ -54,5 +56,4 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if not code:
         return func.HttpResponse("400 Bad Request.\n\nWe need code passed from Microsoft.", status_code=400)
 
-    getToken(code)
-    return func.HttpResponse(f"Authorized successfully! Token has been saved.")
+    return getToken(code)

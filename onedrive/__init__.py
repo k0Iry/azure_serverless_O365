@@ -2,29 +2,85 @@ import logging
 
 import azure.functions as func
 from azure.data.tables import TableClient
-import os
+import os, json, urllib.request, urllib.parse, mimetypes
+from urllib.error import URLError, HTTPError
 
-# This function provides interface to interact with OneDrive's API
-# You must provide an auth code to trigger this function
-# Only accept "GET" request, this will handle API calling into OneDrive.
+api_endpoint = os.environ["GraphAPI_endpoint"]
 
-# In url parameters, we need to specify the action needed(view, search, download...)
+def onedrv_upload(token):
+    """This function upload a file to a directory
+
+    Args:
+        token: The access token.
+
+    Returns:
+        return a upload link for the server.
+
+    """
+    pass
+
+def get_onedrv_id(token):
+    if not get_onedrv_id.id:
+        request = urllib.request.Request(api_endpoint + "/me/drive")
+        request.add_header("Authorization", "Bearer {}".format(token))
+        try:
+            response = urllib.request.urlopen(request)
+            res_body = json.loads(response.read().decode())
+            if "id" in res_body:
+                get_onedrv_id.id = res_body["id"]
+        except HTTPError as e:
+            print('Error code: ', e.code)
+        except URLError as e:
+            print('Reason: ', e.reason)
+
+    return get_onedrv_id.id
+
+def access(token, path, dir) -> func.HttpResponse:
+    """Access folder with 'path' in onedrive.
+
+    Args:
+        token: The access token.
+        path: The path to be accessed, if not given, root.
+
+    Returns:
+        Return the meta data for files under this path
+
+    """
+    concat = "/drives/{}/root:/{}:/children" if dir else "/drives/{}/root:/{}"
+    full_path = "/me/drive/root/children" if not path else concat.format(get_onedrv_id(token), path)
+    request = urllib.request.Request(api_endpoint + full_path)
+    request.add_header("Authorization", "Bearer {}".format(token))
+    try:
+        response = urllib.request.urlopen(request)
+    except HTTPError as e:
+        return func.HttpResponse("Error msg: {}".format(e.msg), status_code=e.code)
+    except URLError as e:
+        return func.HttpResponse("URL error: {}".format(e.reason), status_code=404)
+
+    return func.HttpResponse(body=response.read(), status_code=response.status)
+
+def is_dir(path):
+    type, _ = mimetypes.guess_type(path, True)
+    return (not type)
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
+    """Main function, maintain a connection to the database."""
+
     logging.info('HTTP trigger function processed a OneDrive request.')
-    # get the token at first
-    # connection_string = os.environ["AzureWebJobsStorage"]
-    # client = TableClient.from_connection_string(conn_str=connection_string, table_name="tokens")
-    # entity = client.get_entity(partition_key="pk", row_key="rk")
-    # token = entity.access_token.value
+    if not main.client:
+        main.client = TableClient.from_connection_string(conn_str=os.environ["AzureWebJobsStorage"], table_name="tokens")
+
+    entity = main.client.get_entity(partition_key="pk", row_key="rk")
+    token = entity.access_token.value
 
     if req.method == "GET":
-        action = req.params.get("action")
-        if not action:
-            return func.HttpResponse("You need to provide an action upon this perform.", status_code=400)
-        return func.HttpResponse(
-            "Haven't implemented for {} yet.".format(action),
-            status_code=404
-        )
+        path_encoded = urllib.parse.quote(req.params.get("access"))
+        return access(token, path_encoded, is_dir(path_encoded))
     
-    return func.HttpResponse("Method {} is not supported.".format(req.method), status_code=404)
+    return func.HttpResponse("choose an action")
+
+"""
+functional scope variables
+"""
+main.client = None
+get_onedrv_id.id = ""
