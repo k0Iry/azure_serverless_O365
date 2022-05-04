@@ -35,6 +35,7 @@ def get_onedrv_id(token):
 
     return get_onedrv_id.id
 
+
 def access(token, path, dir) -> func.HttpResponse:
     """Access folder with 'path' in onedrive.
 
@@ -49,7 +50,7 @@ def access(token, path, dir) -> func.HttpResponse:
     """
     concat = "/drives/{}/root:/{}:/children" if dir else "/drives/{}/root:/{}"
     full_path = "/me/drive/root/children" if not path else concat.format(get_onedrv_id(token), path)
-    request = urllib.request.Request(api_endpoint + full_path)
+    request = urllib.request.Request(api_endpoint + full_path + "?$expand=thumbnails")
     request.add_header("Authorization", "Bearer {}".format(token))
     try:
         response = urllib.request.urlopen(request)
@@ -72,7 +73,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         main.client = TableClient.from_connection_string(conn_str=os.environ["AzureWebJobsStorage"], table_name="tokens")
 
     entity = main.client.get_entity(partition_key="pk", row_key="rk")
-    token = entity.access_token.value
+    token = entity['access_token']
 
     if req.method == "GET":
         path_encoded = urllib.parse.quote(req.params.get("access")) if req.params.get("access") else None
