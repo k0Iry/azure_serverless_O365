@@ -4,7 +4,7 @@ import azure.functions as func
 import json, os, urllib.request
 
 from azure.data.tables import TableClient
-from azure.core.exceptions import ResourceExistsError, HttpResponseError
+from azure.core.exceptions import HttpResponseError
 from urllib.parse import urlencode, quote_plus
 from urllib.error import URLError, HTTPError
 
